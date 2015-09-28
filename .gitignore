@@ -1,0 +1,3 @@
+cmd/feeder-cli/feeder-cli
+cmd/feeder-api/feeder-api
+build/
