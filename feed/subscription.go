@@ -2,9 +2,8 @@ package feed
 
 import "time"
 
-// A Subscription delivers Items over a channel.  Close cancels the
-// subscription, closes the Updates channel, and returns the last fetch error,
-// if any.
+// A Subscription delivers Items over a channel. Close cancels the
+// subscription, closes the Updates channel, and returns the last fetch error
 type Subscription interface {
 	Updates() <-chan Item // stream of updates
 	Close() error         // close subscription
