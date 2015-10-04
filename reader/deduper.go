@@ -1,4 +1,4 @@
-package feed
+package reader
 
 // NewDeduper returns new Deduper that converts
 // Subscription that may send duplicate Items into one that doesn't.

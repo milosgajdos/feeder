@@ -3,8 +3,6 @@ package reader
 import (
 	"fmt"
 	"sync"
-
-	"github.com/milosgajdos83/feeder/feed"
 )
 
 // Reader adds or removes subscriptions and provides updates stream
@@ -12,7 +10,7 @@ import (
 type Reader interface {
 	Subscribe(string) error
 	Unsubscribe(string) error
-	Updates() <-chan feed.Item
+	Updates() <-chan Item
 	Close() error
 }
 
@@ -20,8 +18,8 @@ type Reader interface {
 type reader struct {
 	cache   Cache
 	mu      sync.RWMutex
-	subs    chan feed.Subscription
-	updates chan feed.Item
+	subs    chan Subscription
+	updates chan Item
 	quit    chan struct{}
 	errs    chan error
 }
@@ -34,8 +32,8 @@ func NewReader() (Reader, error) {
 	}
 	r := &reader{
 		cache:   cache,
-		subs:    make(chan feed.Subscription),
-		updates: make(chan feed.Item),
+		subs:    make(chan Subscription),
+		updates: make(chan Item),
 		quit:    make(chan struct{}),
 		errs:    make(chan error),
 	}
@@ -45,9 +43,9 @@ func NewReader() (Reader, error) {
 
 func (r *reader) run() {
 	for sub := range r.subs {
-		go func(s feed.Subscription) {
+		go func(s Subscription) {
 			for {
-				var it feed.Item
+				var it Item
 				select {
 				// receive Items from particular Subscription
 				case it = <-s.Updates():
@@ -69,7 +67,7 @@ func (r *reader) run() {
 
 // Subscribe adds a new RSS subscription or returns error if it cant be added
 func (r *reader) Subscribe(uri string) error {
-	s := feed.NewDeduper(feed.NewSubscription(feed.NewFetcher(uri)))
+	s := NewDeduper(NewSubscription(NewFetcher(uri)))
 	if err := r.cache.Insert(uri, s); err != nil {
 		s.Close()
 		return err
@@ -93,7 +91,7 @@ func (r *reader) Unsubscribe(uri string) error {
 }
 
 // Updates returns deduplicated merged Item stream
-func (r *reader) Updates() <-chan feed.Item {
+func (r *reader) Updates() <-chan Item {
 	return r.updates
 }
 

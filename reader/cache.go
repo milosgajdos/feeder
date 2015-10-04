@@ -3,8 +3,6 @@ package reader
 import (
 	"fmt"
 	"sync"
-
-	"github.com/milosgajdos83/feeder/feed"
 )
 
 const (
@@ -14,29 +12,29 @@ const (
 // Cache stores subscriptions in memory keyed by uri
 // and provides a basic operations on top of it
 type Cache interface {
-	Insert(string, feed.Subscription) error
+	Insert(string, Subscription) error
 	Delete(string) error
-	Find(string) (feed.Subscription, error)
-	Close() map[string]feed.Subscription
+	Find(string) (Subscription, error)
+	Close() map[string]Subscription
 }
 
 // cache implements Cache interface
 type cache struct {
-	subs   map[string]feed.Subscription
+	subs   map[string]Subscription
 	closed bool
 	mu     sync.RWMutex
 }
 
 // Newcache returns new cache or error
 func NewCache() (Cache, error) {
-	subs := make(map[string]feed.Subscription)
+	subs := make(map[string]Subscription)
 	return &cache{
 		subs: subs,
 	}, nil
 }
 
 // Insert adds a new sibscription to cache
-func (c *cache) Insert(key string, s feed.Subscription) error {
+func (c *cache) Insert(key string, s Subscription) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.closed {
@@ -67,7 +65,7 @@ func (c *cache) Delete(key string) error {
 
 // Finds searches for a given subscription in caches and returns is
 // if it can't find it in the cache it returns error
-func (c *cache) Find(uri string) (feed.Subscription, error) {
+func (c *cache) Find(uri string) (Subscription, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	s, ok := c.subs[uri]
@@ -78,7 +76,7 @@ func (c *cache) Find(uri string) (feed.Subscription, error) {
 }
 
 // Closes the cache and returns underlying store
-func (c *cache) Close() map[string]feed.Subscription {
+func (c *cache) Close() map[string]Subscription {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.closed = true
