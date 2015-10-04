@@ -9,8 +9,8 @@ type Subscription interface {
 	Close() error         // close subscription
 }
 
-// Subscribe returns a new Subscription that uses fetcher to fetch Items.
-func Subscribe(fetcher Fetcher) Subscription {
+// NewSubscription returns a new Subscription that uses fetcher to fetch Items.
+func NewSubscription(fetcher Fetcher) Subscription {
 	s := &sub{
 		fetcher: fetcher,
 		updates: make(chan Item),       // for Updates

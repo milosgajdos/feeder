@@ -2,26 +2,48 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/milosgajdos83/feeder/feed"
+	"github.com/milosgajdos83/feeder/reader"
 )
 
 func main() {
-	// Subscribe to some feeds, and create a merged update stream
-	merged := feed.Merge(
-		feed.Dedupe(feed.Subscribe(feed.Fetch("www.goal.com/en-gb/feeds/news?fmt=rss"))))
-
-	// Close the subscriptions after some time.
-	time.AfterFunc(3*time.Second, func() {
-		fmt.Println("Closing fetch")
-		if err := merged.Close(); err != nil {
-			fmt.Println("Error: ", err)
+	// registers signal handler
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, os.Interrupt, os.Kill, syscall.SIGTERM)
+	reader, err := reader.NewReader()
+	if err != nil {
+		fmt.Println("Error creating reader:", err)
+		os.Exit(1)
+	}
+	// Signal handler
+	go func() {
+		// Wait for a SIGINT or SIGKILL:
+		sig := <-sigc
+		fmt.Println("Shutting down reader. Got signal:", sig)
+		// Stop listening (and unlink the socket if unix type):
+		err := reader.Close()
+		if err != nil {
+			fmt.Println("Error closing reader: ", err)
 		}
-	})
+		os.Exit(1)
+	}()
+	// Goal.com RSS feed
+	if err := reader.Subscribe("http://www.goal.com/en-gb/feeds/news?fmt=rss"); err != nil {
+		fmt.Println("Error subscribing:", err)
+		fmt.Println("Closing reader:", reader.Close())
+		os.Exit(1)
+	}
+	// BBC RSS feed
+	if err := reader.Subscribe("http://feeds.bbci.co.uk/sport/0/football/rss.xml?edition=uk"); err != nil {
+		fmt.Println("Error subscribing:", err)
+		fmt.Println("Closing reader:", reader.Close())
+		os.Exit(1)
+	}
 
-	// Print the stream.
-	for it := range merged.Updates() {
+	for it := range reader.Updates() {
 		fmt.Println(it.Channel, it.Title)
 	}
 }

@@ -1,8 +1,8 @@
 package feed
 
-// Dedupe converts a Subscription that may send duplicate Items into
-// one that doesn't.
-func Dedupe(s Subscription) Subscription {
+// NewDeduper returns new Deduper that converts
+// Subscription that may send duplicate Items into one that doesn't.
+func NewDeduper(s Subscription) Subscription {
 	d := &deduper{
 		s:       s,
 		updates: make(chan Item),
@@ -12,6 +12,7 @@ func Dedupe(s Subscription) Subscription {
 	return d
 }
 
+// deduper implements Subscription interface
 type deduper struct {
 	s       Subscription
 	updates chan Item
